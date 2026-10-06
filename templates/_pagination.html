@@ -1,0 +1,27 @@
+{# Thanh phân trang dùng chung.
+   endpoint: tên route, param: tên tham số trang, extra: các tham số URL khác #}
+{% macro pagination(page, total_pages, pages, endpoint, param, extra={}) %}
+  {% if total_pages > 1 %}
+  <nav class="pagination" aria-label="Phân trang">
+    {% if page > 1 %}
+      <a class="pg" href="{{ url_for(endpoint, **dict(extra, **{param: page - 1})) }}">‹ Trước</a>
+    {% else %}
+      <span class="pg disabled">‹ Trước</span>
+    {% endif %}
+    {% for p in pages %}
+      {% if p is none %}
+        <span class="pg ellipsis">…</span>
+      {% elif p == page %}
+        <span class="pg current">{{ p }}</span>
+      {% else %}
+        <a class="pg" href="{{ url_for(endpoint, **dict(extra, **{param: p})) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page < total_pages %}
+      <a class="pg" href="{{ url_for(endpoint, **dict(extra, **{param: page + 1})) }}">Sau ›</a>
+    {% else %}
+      <span class="pg disabled">Sau ›</span>
+    {% endif %}
+  </nav>
+  {% endif %}
+{% endmacro %}

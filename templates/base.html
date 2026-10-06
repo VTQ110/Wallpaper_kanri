@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Wallpaper Kanri{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" hidden>
+  <label for="nav-toggle" class="menu-btn" aria-label="Mở menu">☰</label>
+
+  <aside class="sidebar">
+    <a href="{{ url_for('index') }}" class="brand">🖼️ Wallpaper Kanri</a>
+
+    <section class="panel">
+      <h2>Upload hình ảnh</h2>
+      <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" id="upload-form">
+        <label class="dropzone" id="dropzone">
+          <input type="file" name="images" id="file-input" accept="image/*" multiple hidden>
+          <span class="dz-icon">⬆</span>
+          <span class="dz-text">Kéo thả ảnh vào đây<br>hoặc <u>bấm để chọn</u></span>
+        </label>
+        <ul class="file-list" id="file-list"></ul>
+        <button type="submit" class="btn btn-primary" id="upload-btn" disabled>Upload</button>
+        <p class="hint">Định dạng: {{ allowed_ext }}<br>Tối đa {{ max_upload_mb }} MB mỗi lần.</p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Thống kê</h2>
+      <p class="stat"><span>Số ảnh</span><b>{{ total_images }}</b></p>
+      <p class="stat"><span>Dung lượng</span><b>{{ total_size }}</b></p>
+    </section>
+
+    <section class="panel">
+      <h2>Số ảnh mỗi trang</h2>
+      <div class="per-page">
+        {% for n in per_page_options %}
+          <a href="{{ url_for('index', per_page=n) }}" class="chip {% if per_page == n %}active{% endif %}">{{ n }}</a>
+        {% endfor %}
+      </div>
+    </section>
+  </aside>
+
+  <main class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    (function () {
+      const input = document.getElementById('file-input');
+      const zone = document.getElementById('dropzone');
+      const list = document.getElementById('file-list');
+      const btn = document.getElementById('upload-btn');
+
+      function render() {
+        list.innerHTML = '';
+        Array.from(input.files).forEach(f => {
+          const li = document.createElement('li');
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(f);
+          img.onload = () => URL.revokeObjectURL(img.src);
+          const span = document.createElement('span');
+          span.textContent = f.name;
+          li.append(img, span);
+          list.appendChild(li);
+        });
+        btn.disabled = input.files.length === 0;
+        btn.textContent = input.files.length ? `Upload ${input.files.length} ảnh` : 'Upload';
+      }
+
+      input.addEventListener('change', render);
+      ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => {
+        e.preventDefault(); zone.classList.add('over');
+      }));
+      ['dragleave', 'drop'].forEach(ev => zone.addEventListener(ev, e => {
+        e.preventDefault(); zone.classList.remove('over');
+      }));
+      zone.addEventListener('drop', e => {
+        input.files = e.dataTransfer.files;
+        render();
+      });
+      document.getElementById('upload-form').addEventListener('submit', () => {
+        btn.disabled = true; btn.textContent = 'Đang upload…';
+      });
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

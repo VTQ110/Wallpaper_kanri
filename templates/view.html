@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pagination %}
+
+{% block title %}{{ image.display_name }} · Wallpaper Kanri{% endblock %}
+
+{% block content %}
+<header class="page-head">
+  <a href="{{ url_for('index', page=back_page, per_page=per_page) }}" class="btn btn-small">← Thư viện</a>
+  <h1 class="truncate">{{ image.display_name }}</h1>
+  <span class="muted">Ảnh {{ position }} / {{ count }}</span>
+</header>
+
+<div class="viewer">
+  {% if position > 1 %}
+    <a class="nav-arrow left" id="prev" href="{{ url_for('view', position=position - 1, per_page=per_page) }}" aria-label="Ảnh trước">‹</a>
+  {% endif %}
+  <img src="{{ url_for('uploaded_file', filename=image.name) }}" alt="{{ image.display_name }}">
+  {% if position < count %}
+    <a class="nav-arrow right" id="next" href="{{ url_for('view', position=position + 1, per_page=per_page) }}" aria-label="Ảnh sau">›</a>
+  {% endif %}
+</div>
+
+<div class="viewer-info">
+  <span>{{ image.width }}×{{ image.height }} px</span>
+  <span>{{ image.size }}</span>
+  <span>Upload: {{ image.uploaded }}</span>
+  <div class="actions">
+    <button class="btn btn-small" id="preview-bg">Xem thử làm hình nền</button>
+    <a href="{{ url_for('uploaded_file', filename=image.name, download=1) }}" class="btn btn-small btn-primary">Tải về</a>
+    <form action="{{ url_for('delete', filename=image.name) }}" method="post"
+          onsubmit="return confirm('Xóa ảnh này?')">
+      <input type="hidden" name="next" value="{{ url_for('view', position=position if position < count else position - 1, per_page=per_page) }}">
+      <button class="btn btn-small btn-danger">Xóa</button>
+    </form>
+  </div>
+</div>
+
+{{ pagination(position, count, pages, 'view', 'position', {'per_page': per_page}) }}
+
+<div class="bg-preview" id="bg-preview"
+     style="background-image: url('{{ url_for('uploaded_file', filename=image.name) }}')">
+  <span>Bấm hoặc nhấn Esc để thoát</span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const overlay = document.getElementById('bg-preview');
+  document.getElementById('preview-bg').onclick = () => overlay.classList.add('show');
+  overlay.onclick = () => overlay.classList.remove('show');
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') overlay.classList.remove('show');
+    if (overlay.classList.contains('show')) return;
+    if (e.key === 'ArrowLeft' && document.getElementById('prev')) document.getElementById('prev').click();
+    if (e.key === 'ArrowRight' && document.getElementById('next')) document.getElementById('next').click();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pagination %}
+
+{% block content %}
+<header class="page-head">
+  <h1>Thư viện hình nền</h1>
+  {% if total_images %}
+    <span class="muted">Trang {{ page }} / {{ total_pages }} · {{ total_images }} ảnh</span>
+  {% endif %}
+</header>
+
+{% if images %}
+  <div class="grid">
+    {% for img in images %}
+      {% set pos = start + loop.index %}
+      <figure class="card">
+        <a href="{{ url_for('view', position=pos, per_page=per_page) }}" class="thumb">
+          <img src="{{ url_for('thumbnail', filename=img.name) }}" alt="{{ img.display_name }}" loading="lazy">
+        </a>
+        <figcaption>
+          <span class="name" title="{{ img.display_name }}">{{ img.display_name }}</span>
+          <span class="meta">{{ img.width }}×{{ img.height }} · {{ img.size }}</span>
+          <div class="actions">
+            <a href="{{ url_for('uploaded_file', filename=img.name, download=1) }}" class="btn btn-small">Tải về</a>
+            <form action="{{ url_for('delete', filename=img.name) }}" method="post"
+                  onsubmit="return confirm('Xóa ảnh này?')">
+              <input type="hidden" name="next" value="{{ url_for('index', page=page, per_page=per_page) }}">
+              <button class="btn btn-small btn-danger">Xóa</button>
+            </form>
+          </div>
+        </figcaption>
+      </figure>
+    {% endfor %}
+  </div>
+
+  {{ pagination(page, total_pages, pages, 'index', 'page', {'per_page': per_page}) }}
+{% else %}
+  <div class="empty">
+    <div class="empty-icon">🖼️</div>
+    <p>Chưa có hình ảnh nào.<br>Hãy upload ảnh từ menu bên trái.</p>
+  </div>
+{% endif %}
+{% endblock %}
